@@ -31,11 +31,14 @@ type GerritEventStreamHandler interface {
 	GerritEventListener
 	GerritReviewWriter
 }
+type GitSSHRemote struct {
+	*url.URL
+	SshKeyPath string
+}
 
 // GerritSSHClient represents a Gerrit server
 type GerritSSHClient struct {
-	*url.URL
-	SshKeyPath string
+	GitSSHRemote
 }
 
 // GerritEventListener is an interface for listening to Gerrit events
@@ -66,7 +69,8 @@ func NewGerritSSHClient(sshUrl string, sshKeyPath string) (*GerritSSHClient, err
 	if err != nil {
 		return nil, err
 	}
-	return &GerritSSHClient{u, sshKeyPath}, nil
+	sshClient := GitSSHRemote{u, sshKeyPath}
+	return &GerritSSHClient{sshClient}, nil
 }
 
 // Build the command arguemtns for an ssh connection to Gerrit
