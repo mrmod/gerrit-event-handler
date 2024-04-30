@@ -12,9 +12,15 @@ import (
 )
 
 var (
-	flagStreamType       = flag.String("stream-type", "ssh", "Stream type to use")
+	flagStreamType = flag.String("stream-type", "ssh", "Stream type to use")
+
 	flagGerritSshUrl     = flag.String("gerrit-ssh-url", "ssh://gerrit:29418/project", "Gerrit SSH URL")
 	flagGerritSshKeyPath = flag.String("gerrit-ssh-key-path", "/path/to/credentials", "File with ssh private key authorized to Gerrit")
+
+	flagEnableChangeReplication   = flag.Bool("enable-change-replication", false, "Enable change replication on 'patchset-created' event")
+	flagReplicationDestinationUrl = flag.String("replication-destination-url", "file:///path/to/destination", "Destination URL for replication")
+	flagReplicationSshKeyPath     = flag.String("replication-ssh-key-path", "/path/to/credentials", "File with ssh private key authorized to destination")
+	flagReplicationClonePath      = flag.String("replication-clone-path", "", "Path to clone source repository to. If empty, will use system temp dir")
 
 	flagBuildkiteOrgSlug                = flag.String("buildkite-org-slug", "org-slug", "Buildkite organization slug")
 	flagBuildkitePipelineSlug           = flag.String("buildkite-pipeline-slug", "pipeline-slug", "Buildkite pipeline slug")
