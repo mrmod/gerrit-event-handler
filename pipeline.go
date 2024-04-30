@@ -11,6 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type BuildPipeline interface {
+	CreateBuild(*buildkite.CreateBuild) (buildNumber int, err error)
+	CancelBuild(buildNumber int) error
+}
+
 // Pipeline represents a Buildkite pipeline
 type Pipeline struct {
 	OrgSlug, PipelineSlug string

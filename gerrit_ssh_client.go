@@ -167,10 +167,16 @@ func (s *GerritSSHClient) Listen(events chan<- Event) {
 // Handle dispatches events to the appropriate handler
 func (s *GerritSSHClient) Handle(events chan Event, p BuildPipeline, b backend.Backend) {
 	for event := range events {
-		if handler, ok := eventRouter[event.Type]; ok {
+		if handlers, ok := eventRouter[event.Type]; ok {
 			log.Trace().Any("event", event).Msg("Raw Event from Dispatch")
 			log.Debug().Str("eventType", event.Type).Msgf("Handling dispatched event %s", event.Type)
-			handler(event, p, b)
+			for i, handler := range handlers {
+				log.Trace().
+					Int("handlerId", i).
+					Str("eventType", event.Type).
+					Msg("Dispatching event to handler")
+				go handler(event, p, b)
+			}
 			continue
 		}
 		log.Info().Str("eventType", event.Type).Msgf("No handler for event %s", event.Type)
