@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/mrmod/gerrit-buildkite/backend"
@@ -69,7 +70,11 @@ func NewGerritSSHClient(sshUrl string, sshKeyPath string) (*GerritSSHClient, err
 	if err != nil {
 		return nil, err
 	}
-	sshClient := GitSSHRemote{u, sshKeyPath}
+	_sshKeyPath, err := filepath.Abs(sshKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	sshClient := GitSSHRemote{u, _sshKeyPath}
 	return &GerritSSHClient{sshClient}, nil
 }
 
