@@ -23,6 +23,7 @@ var (
 	flagReplicationSshKeyPath     = flag.String("replication-ssh-key-path", "/path/to/credentials", "File with ssh private key authorized to destination")
 	flagReplicationClonePath      = flag.String("replication-clone-path", "", "Path to clone source repository to. If empty, will use system temp dir")
 
+	flagEnableBuildkiteIntegration      = flag.Bool("enable-buildkite-integration", false, "Enable Buildkite integration")
 	flagBuildkiteOrgSlug                = flag.String("buildkite-org-slug", "org-slug", "Buildkite organization slug")
 	flagBuildkitePipelineSlug           = flag.String("buildkite-pipeline-slug", "pipeline-slug", "Buildkite pipeline slug")
 	flagBuildkiteApiUrl                 = flag.String("buildkite-api-url", "https://api.buildkite.com/v2", "Buildkite API URL")
@@ -88,7 +89,14 @@ func handleSSHEventStream() {
 		ApiUrl:       apiUrl,
 		ApiClient:    apiTransport.Client(),
 	}
+	if *flagEnableBuildkiteIntegration {
+		log.Debug().Msg("Buildkite integration enabled")
+		eventRouter["patchset-created"] = append(eventRouter["patchset-created"], HandlePatchsetCreated)
+	}
+
 	if *flagEnableChangeReplication {
+		log.Debug().Msg("Change replication enabled")
+
 		destinationUrl, err := url.Parse(*flagReplicationDestinationUrl)
 		if err != nil {
 			log.
@@ -107,6 +115,7 @@ func handleSSHEventStream() {
 			// Replicate from refs/changes/01/2/1 to change-3
 			return replicator.Replicate(event.PatchSet.Ref, fmt.Sprintf("change-%d", event.Change.Number))
 		}
+
 
 		eventRouter["patchset-created"] = append(eventRouter["patchset-created"], handleReplication)
 	}

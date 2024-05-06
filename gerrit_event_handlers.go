@@ -11,7 +11,7 @@ import (
 
 var (
 	eventRouter = map[string][]EventHandlerFunc{
-		"patchset-created": {HandlePatchsetCreated},
+		"patchset-created": {},
 		"ref-updated":      {HandleRefUpdated},
 		"comment-added":    {HandleCommentAdded},
 	}

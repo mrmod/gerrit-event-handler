@@ -19,6 +19,13 @@ gerrit-event-handler \
     --gerrit-ssh-url 'ssh://user@gerrit:29418/my-project' \
     --gerrit-ssh-key-path key-in-current-directory
 ```
+## Should have Opt-In Buildkite integration
+
+Given the Gerrit Event Handler has multiple features
+And we want to opt-out of all features by default
+And we want a way to opt-in to using the BuildKite integration
+Then `--enable-buildkite-integration` should enable it
+
 
 ## Should Create BuildKite Build Jobs
 
