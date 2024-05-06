@@ -1,8 +1,30 @@
 name: Run Tests
 
 on: [push]
+env:
+  REPOSITORY_URL: 588487667149.dkr.ecr.us-west-2.amazonaws.com/ssh-server
+  AWS_REGION: us-west-2
+  AWS_ROLE_TO_ASSUME: arn:aws:iam::588487667149:role/ecr_role
+
 
 jobs:
+  build_ssh_server:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+    - name: Build ssh-server image
+      run: cd ssh-server && docker build -t ${{ env.REPOSITORY_URL }} -f Dockerfile .
+    - name: Generate SSH Keys
+      run: ssh-keygen -t rsa -b 4096 -f ./local.key -N ""
+    - name: Create authorized keys
+      run: cat ./local.key.pub > ./authorized_keys
   build:
     runs-on: ubuntu-latest
     strategy:

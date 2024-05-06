@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -87,7 +88,28 @@ func handleSSHEventStream() {
 		ApiUrl:       apiUrl,
 		ApiClient:    apiTransport.Client(),
 	}
+	if *flagEnableChangeReplication {
+		destinationUrl, err := url.Parse(*flagReplicationDestinationUrl)
+		if err != nil {
+			log.
+				Fatal().
+				Err(err).
+				Str("destinationUrl", *flagReplicationDestinationUrl).
+				Msg("Failed to parse replication destination URL")
+		}
 
+		destinationRepository := &GitSSHRemote{
+			URL:        destinationUrl,
+			SshKeyPath: *flagReplicationSshKeyPath,
+		}
+		replicator := NewSSHReplicator(&client.GitSSHRemote, destinationRepository, *flagReplicationClonePath)
+		handleReplication := func(event Event, p BuildPipeline, b backend.Backend) error {
+			// Replicate from refs/changes/01/2/1 to change-3
+			return replicator.Replicate(event.PatchSet.Ref, fmt.Sprintf("change-%d", event.Change.Number))
+		}
+
+		eventRouter["patchset-created"] = append(eventRouter["patchset-created"], handleReplication)
+	}
 	go client.Handle(eventStream, pipeline, _backend)
 	log.Info().Msg("Listening for Gerrit events")
 	client.Listen(eventStream)

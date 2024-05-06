@@ -13,4 +13,5 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
