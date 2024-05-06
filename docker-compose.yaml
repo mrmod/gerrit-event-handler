@@ -26,16 +26,19 @@ services:
       - "6379:6379"
   gerrit:
     image: gerritcodereview/gerrit
+    hostname: localhost
+    # Set admin API password
+    # ssh localhost -p 29418 -i ./local.private.key -l admin 'gerrit set-account admin --http-password abc123'
     volumes:
       - type: bind
-        source: ./gerrit-root/git
+        source: "./${GERRIT_ROOT}/git"
         target: /var/gerrit/git
       - type: bind
-        source: ./gerrit-root/index
+        source: "./${GERRIT_ROOT}/index"
         target: /var/gerrit/index
       - type: bind
-        source: ./gerrit-root/cache
+        source: "./${GERRIT_ROOT}/cache"
         target: /var/gerrit/cache
     ports:
-       - "29418:29418"
-       - "8080:8080"
+       - "${GERRIT_PORT}:29418"
+       - "${GERRIT_WEB_PORT}:8080"

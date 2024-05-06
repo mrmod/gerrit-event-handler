@@ -12,8 +12,8 @@ import (
 var (
 	eventRouter = map[string][]EventHandlerFunc{
 		"patchset-created": {},
-		"ref-updated":      {HandleRefUpdated},
-		"comment-added":    {HandleCommentAdded},
+		"ref-updated":      {},
+		"comment-added":    {},
 	}
 	commentCommands = map[*regexp.Regexp]commandFunc{
 		regexp.MustCompile(`(?mi)^retest$`): handleRetestComment,

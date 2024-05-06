@@ -8,28 +8,32 @@ env:
 
 
 jobs:
-  build_ssh_server:
-    permissions:
-      id-token: write
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ env.AWS_REGION }}
-        role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-    - name: ECR Login
-      uses: aws-actions/amazon-ecr-login@v2
-    - name: Build ssh-server image
-      run: cd ssh-server && docker build -t ${{ env.REPOSITORY_URL }} -f Dockerfile .
-    - name: Push ssh-server image
-      run: docker push ${{ env.REPOSITORY_URL }}:latest
-    # - name: Generate SSH Keys
-    #   run: ssh-keygen -t rsa -b 4096 -f ./local.key -N ""
-    # - name: Create authorized keys
-    #   run: cat ./local.key.pub > ./authorized_keys
-
+  # check_development_environment:
+  #   runs-on: self-hosted
+  #   steps:
+  #   - name: Check out code
+  #     uses: actions/checkout@v2
+  #   - name: Create a new Gerrit Instance
+  #     run: ./recreate_gerrit_instance.sh
+  #   - name: Setup Gerrit and a Test Repository
+  #     run: ./setup_gerrit.sh
+  # build_ssh_server:
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: aws-actions/configure-aws-credentials@v4
+  #     with:
+  #       aws-region: ${{ env.AWS_REGION }}
+  #       role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+  #   - name: ECR Login
+  #     uses: aws-actions/amazon-ecr-login@v2
+  #   - name: Build ssh-server image
+  #     run: cd ssh-server && docker build -t ${{ env.REPOSITORY_URL }} -f Dockerfile .
+  #   - name: Push ssh-server image
+  #     run: docker push ${{ env.REPOSITORY_URL }}:latest
   build:
     runs-on: ubuntu-latest
     strategy:

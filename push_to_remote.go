@@ -106,7 +106,6 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 	}
 
 	fetchCmd := createGitCommand(buildFetchCommandArgs(srcRef), []string{"GIT_SSH_COMMAND=ssh " + srcGitSshCommand})
-
 	if err := execGitCommand(fetchCmd); err != nil {
 		return err
 	}
@@ -117,7 +116,6 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 	}
 
 	forcePushCmd := createGitCommand(buildForcePushCommandArgs(s.DestinationRepository.String(), destRef), []string{"GIT_SSH_COMMAND=ssh " + dstGitSsshCommand})
-
 	if err := execGitCommand(forcePushCmd); err != nil {
 		return err
 	}
@@ -163,7 +161,6 @@ func createGitCommand(args []string, env []string) *exec.Cmd {
 		Str("cmd", cmd.String()).
 		Str("env", strings.Join(cmd.Env, " ")).
 		Msg("Created git command")
-
 	return cmd
 }
 func execGitCommand(cmd *exec.Cmd) error {

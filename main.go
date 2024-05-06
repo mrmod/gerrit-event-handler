@@ -23,14 +23,14 @@ var (
 	flagReplicationSshKeyPath     = flag.String("replication-ssh-key-path", "/path/to/credentials", "File with ssh private key authorized to destination")
 	flagReplicationClonePath      = flag.String("replication-clone-path", "", "Path to clone source repository to. If empty, will use system temp dir")
 
-	flagEnableBuildkiteIntegration      = flag.Bool("enable-buildkite-integration", false, "Enable Buildkite integration")
-	flagBuildkiteOrgSlug                = flag.String("buildkite-org-slug", "org-slug", "Buildkite organization slug")
-	flagBuildkitePipelineSlug           = flag.String("buildkite-pipeline-slug", "pipeline-slug", "Buildkite pipeline slug")
-	flagBuildkiteApiUrl                 = flag.String("buildkite-api-url", "https://api.buildkite.com/v2", "Buildkite API URL")
-	flagBuildkiteApiTokenPath           = flag.String("buildkite-api-token-path", "/path/to/credentials", "File with an API token for Buildkite. Token should have write_builds permission")
-	flagBuildkiteWebhookHandlerDisabled = flag.Bool("disable-buildkite-webhook-handler", true, "Disable Buildkite webhook handler when passed")
+	flagEnableBuildkiteIntegration = flag.Bool("enable-buildkite-integration", false, "Enable Buildkite integration")
+	flagBuildkiteOrgSlug           = flag.String("buildkite-org-slug", "org-slug", "Buildkite organization slug")
+	flagBuildkitePipelineSlug      = flag.String("buildkite-pipeline-slug", "pipeline-slug", "Buildkite pipeline slug")
+	flagBuildkiteApiUrl            = flag.String("buildkite-api-url", "https://api.buildkite.com/v2", "Buildkite API URL")
+	flagBuildkiteApiTokenPath      = flag.String("buildkite-api-token-path", "/path/to/credentials", "File with an API token for Buildkite. Token should have write_builds permission")
 
-	flagWebhookHandlerPort = flag.String("webhook-handler-port", "10005", "Port to listen for Buildkite webhook events. Ex: 8080")
+	flagBuildkiteWebhookHandlerDisabled = flag.Bool("disable-buildkite-webhook-handler", true, "Disable Buildkite webhook handler when passed")
+	flagWebhookHandlerPort              = flag.String("webhook-handler-port", "10005", "Port to listen for Buildkite webhook events. Ex: 8080")
 
 	flagLoggingTraceEnabled = flag.Bool("enable-trace-logging", false, "Enable trace logging")
 	flagLoggingDebugEnabled = flag.Bool("enable-debug-logging", false, "Enable debug logging")
@@ -89,14 +89,18 @@ func handleSSHEventStream() {
 		ApiUrl:       apiUrl,
 		ApiClient:    apiTransport.Client(),
 	}
+	// TODO: An EventHandler should have an Setup(EventRouter{}) sync Function
+	// TODO: An EventHandler should have a Handle(InstrumentedEvent{Event{}, :TraceId}, ResultChan{:*Error, :TraceId}) async Function
+	// TODO: An IntrumentedIntegration should have GetResult(:TraceId) {Done, Error, Running, Pending} sync Function. The order allows `> Done` guard.
 	if *flagEnableBuildkiteIntegration {
 		log.Debug().Msg("Buildkite integration enabled")
 		eventRouter["patchset-created"] = append(eventRouter["patchset-created"], HandlePatchsetCreated)
+		eventRouter["comment-added"] = append(eventRouter["comment-added"], HandleCommentAdded)
+		eventRouter["ref-updated"] = append(eventRouter["ref-updated"], HandleRefUpdated)
 	}
 
 	if *flagEnableChangeReplication {
 		log.Debug().Msg("Change replication enabled")
-
 		destinationUrl, err := url.Parse(*flagReplicationDestinationUrl)
 		if err != nil {
 			log.
@@ -115,7 +119,6 @@ func handleSSHEventStream() {
 			// Replicate from refs/changes/01/2/1 to change-3
 			return replicator.Replicate(event.PatchSet.Ref, fmt.Sprintf("change-%d", event.Change.Number))
 		}
-
 
 		eventRouter["patchset-created"] = append(eventRouter["patchset-created"], handleReplication)
 	}

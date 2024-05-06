@@ -4,6 +4,30 @@ The Gerrit code review and jGit implementation writes line-oriented JSON events 
 
 `./build.sh` will produce `gerrit-event-handler` for use. See the **Features** section below for usage examples.
 
+# Development Environment
+
+Services are defined in `docker-compose.yaml` and use `.env`.
+
+## Gerrit Service
+
+```
+GERRIT_PORT=29418
+GERRIT_WEB_PORT=8080
+
+# Clean and docker-compose a gerrit instance up
+./recreate_gerrit_instance.sh
+
+# Generates an SSH Keypair `gerrit-local-ssh-keypair-$RANDOM`
+# Authorizes the public key as `admin` in Gerrit
+# Creates `test-project` and pushes Change 1
+./setup_gerrit.sh
+```
+
+To put more changes in Gerrit, use the local keypair `GIT_SSH_COMMAND=ssh -i $(pwd)/$PRIVATE_KEY` from the `test-project/` path. Then create **Change-2**
+```
+C=Change-2 ; echo $C >> README.md ; git add -u ; git commit -m "$C" -m "Updated readme with $C" ; git push origin HEAD:refs/for/main
+```
+
 # Features
 
 ## Should Listen for Gerrit Events
@@ -25,7 +49,6 @@ Given the Gerrit Event Handler has multiple features
 And we want to opt-out of all features by default
 And we want a way to opt-in to using the BuildKite integration
 Then `--enable-buildkite-integration` should enable it
-
 
 ## Should Create BuildKite Build Jobs
 

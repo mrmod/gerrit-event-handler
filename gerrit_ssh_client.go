@@ -48,6 +48,7 @@ type GerritEventListener interface {
 }
 
 // GerritEventHandler is an interface for handling Gerrit events
+// TODO: Should simplify using the EventHandler{func Handle(InstrumentedEvent, ResultChan)} async interface
 type GerritEventHandler interface {
 	Handle(chan Event, BuildPipeline, backend.Backend)
 }
