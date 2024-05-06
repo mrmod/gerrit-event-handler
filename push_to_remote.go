@@ -57,18 +57,25 @@ func NewSSHReplicator(sourceRepository, destinationRepository *GitSSHRemote, clo
 		Msg("Created SSHReplicator")
 	return sshReplicator
 }
+
+func buildSSHCommand(s *GitSSHRemote) string {
+	sshCommand := ""
+	if s.SshKeyPath != "" {
+		sshCommand += " -i " + s.SshKeyPath
+	}
+	if s.URL.User != nil {
+		sshCommand += " -l" + s.URL.User.Username()
+	}
+	return sshCommand
+}
+
 func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 
 	cloneArgs := buildCloneCommandArgs(s.SourceRepository.String(), s.CloneOutputPath)
-	gitSshCommand := ""
-	if s.SourceRepository.SshKeyPath != "" {
-		gitSshCommand += " -i " + s.SourceRepository.SshKeyPath
-	}
-	if s.SourceRepository.URL.User != nil {
-		gitSshCommand += " -l" + s.SourceRepository.URL.User.Username()
-	}
+	srcGitSshCommand := buildSSHCommand(s.SourceRepository)
+	dstGitSsshCommand := buildSSHCommand(s.DestinationRepository)
 
-	cloneCmd := createGitCommand(cloneArgs, []string{"GIT_SSH_COMMAND=ssh " + gitSshCommand})
+	cloneCmd := createGitCommand(cloneArgs, []string{"GIT_SSH_COMMAND=ssh " + srcGitSshCommand})
 
 	if err := execGitCommand(cloneCmd); err != nil {
 		exitError, ok := err.(*exec.ExitError)
@@ -98,7 +105,8 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 		return err
 	}
 
-	fetchCmd := createGitCommand(buildFetchCommandArgs(srcRef), []string{"GIT_SSH_COMMAND=ssh " + gitSshCommand})
+	fetchCmd := createGitCommand(buildFetchCommandArgs(srcRef), []string{"GIT_SSH_COMMAND=ssh " + srcGitSshCommand})
+
 	if err := execGitCommand(fetchCmd); err != nil {
 		return err
 	}
@@ -108,7 +116,8 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 		return err
 	}
 
-	forcePushCmd := createGitCommand(buildForcePushCommandArgs(s.DestinationRepository.String(), destRef), []string{"GIT_SSH_COMMAND=ssh " + gitSshCommand})
+	forcePushCmd := createGitCommand(buildForcePushCommandArgs(s.DestinationRepository.String(), destRef), []string{"GIT_SSH_COMMAND=ssh " + dstGitSsshCommand})
+
 	if err := execGitCommand(forcePushCmd); err != nil {
 		return err
 	}
@@ -150,7 +159,11 @@ func buildForcePushCommandArgs(remoteUrl, ref string) []string {
 func createGitCommand(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("git", args...)
 	cmd.Env = append(cmd.Env, env...)
-	log.Debug().Str("cmd", cmd.String()).Msg("Created git command")
+	log.Debug().
+		Str("cmd", cmd.String()).
+		Str("env", strings.Join(cmd.Env, " ")).
+		Msg("Created git command")
+
 	return cmd
 }
 func execGitCommand(cmd *exec.Cmd) error {

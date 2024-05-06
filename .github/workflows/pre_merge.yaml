@@ -19,12 +19,17 @@ jobs:
       with:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+    - name: ECR Login
+      uses: aws-actions/amazon-ecr-login@v2
     - name: Build ssh-server image
       run: cd ssh-server && docker build -t ${{ env.REPOSITORY_URL }} -f Dockerfile .
-    - name: Generate SSH Keys
-      run: ssh-keygen -t rsa -b 4096 -f ./local.key -N ""
-    - name: Create authorized keys
-      run: cat ./local.key.pub > ./authorized_keys
+    - name: Push ssh-server image
+      run: docker push ${{ env.REPOSITORY_URL }}:latest
+    # - name: Generate SSH Keys
+    #   run: ssh-keygen -t rsa -b 4096 -f ./local.key -N ""
+    # - name: Create authorized keys
+    #   run: cat ./local.key.pub > ./authorized_keys
+
   build:
     runs-on: ubuntu-latest
     strategy:

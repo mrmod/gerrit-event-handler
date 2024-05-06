@@ -1,6 +1,21 @@
 version: '3'
 
+configs:
+  git-remote-ssh-authorized-keys:
+    file: ./git-remote-ssh-authorized-keys/authorized_keys
+
 services:
+  git_remote:
+    image: ssh-server:ubuntu-latest    
+    volumes:
+      - type: bind
+        source: ./git-remote-root
+        target: /git-root
+      - type: bind
+        source: ./git-remote-ssh-authorized-keys/authorized_keys
+        target: /git/.ssh/authorized_keys
+    ports:
+      - "2222:22"
   redis:
     image: redis
     volumes:

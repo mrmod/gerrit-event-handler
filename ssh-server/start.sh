@@ -11,9 +11,6 @@ git init --bare /git-root
 chown -R git:git /git-root
 chown -R git:git /git
 
-ls -la /git/
-ls -la /git/.ssh
-
 /etc/init.d/ssh start
 sleep 1
 while [ 1 ]; do
