@@ -10,20 +10,16 @@ import (
 )
 
 var (
-	eventRouter = map[string]EventHandlerFunc{
-		"patchset-created": HandlePatchsetCreated,
-		"ref-updated":      HandleRefUpdated,
-		"comment-added":    HandleCommentAdded,
+	eventRouter = map[string][]EventHandlerFunc{
+		"patchset-created": {HandlePatchsetCreated},
+		"ref-updated":      {HandleRefUpdated},
+		"comment-added":    {HandleCommentAdded},
 	}
 	commentCommands = map[*regexp.Regexp]commandFunc{
 		regexp.MustCompile(`(?mi)^retest$`): handleRetestComment,
 	}
 )
 
-type BuildPipeline interface {
-	CreateBuild(*buildkite.CreateBuild) (buildNumber int, err error)
-	CancelBuild(buildNumber int) error
-}
 type commandFunc func(event Event, p BuildPipeline, b backend.Backend) error
 
 type EventHandlerFunc func(Event, BuildPipeline, backend.Backend) error
