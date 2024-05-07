@@ -44,7 +44,7 @@ func NewSSHReplicator(sourceRepository, destinationRepository *GitSSHRemote, clo
 	}
 
 	if cloneOutputPath == "" {
-		_cloneOutputPath := os.TempDir()
+		_cloneOutputPath, _ := os.MkdirTemp("", "gerrit-clone")
 		log.Trace().Msgf("Using temp directory for clone output: %s", _cloneOutputPath)
 		sshReplicator.useCloneOutputTemp = true
 		sshReplicator.CloneOutputPath = _cloneOutputPath
@@ -66,12 +66,20 @@ func buildSSHCommand(s *GitSSHRemote) string {
 	if s.URL.User != nil {
 		sshCommand += " -l" + s.URL.User.Username()
 	}
+	for k, v := range s.SshOptions {
+		sshCommand += " -o " + k + "=" + v
+	}
 	return sshCommand
 }
 
 func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
-
-	cloneArgs := buildCloneCommandArgs(s.SourceRepository.String(), s.CloneOutputPath)
+	_cloneOutputPath, err := os.MkdirTemp("", "gerrit-clone")
+	if err != nil {
+		log.Trace().Err(err).Msg("Failed to create temp directory for clone output")
+		return err
+	}
+	defer os.RemoveAll(_cloneOutputPath)
+	cloneArgs := buildCloneCommandArgs(s.SourceRepository.String(), _cloneOutputPath)
 	srcGitSshCommand := buildSSHCommand(s.SourceRepository)
 	dstGitSsshCommand := buildSSHCommand(s.DestinationRepository)
 
@@ -87,12 +95,12 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 
 		if cloneExists && !s.useExistingClone {
 			log.Err(err).
-				Str("cloneOutputPath", s.CloneOutputPath).
+				Str("cloneOutputPath", _cloneOutputPath).
 				Msg("Found existing clone directory, but useExistingClone is false")
 			return err
 		}
 		log.Warn().
-			Str("cloneOutputPath", s.CloneOutputPath).
+			Str("cloneOutputPath", _cloneOutputPath).
 			Msg("Clone destination already exists and is not an empty directory")
 
 		if !cloneExists && err != nil {
@@ -101,7 +109,7 @@ func (s *SSHReplicator) Replicate(srcRef, destRef string) error {
 
 	}
 
-	if err := os.Chdir(s.CloneOutputPath); err != nil {
+	if err := os.Chdir(_cloneOutputPath); err != nil {
 		return err
 	}
 

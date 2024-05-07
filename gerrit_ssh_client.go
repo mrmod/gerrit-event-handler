@@ -25,6 +25,14 @@ var (
 		"-o ServerAliveInterval=10",
 		"-o ServerAliveCountMax=3",
 	}
+	sshOptionDisableHostKeyCheck = map[string]string{
+		"StrictHostKeyChecking": "no",
+		"UserKnownHostsFile":    "/dev/null",
+	}
+	sshOptionKeepAlive = map[string]string{
+		"ServerAliveInterval": "10",
+		"ServerAliveCountMax": "3",
+	}
 )
 
 type GerritEventStreamHandler interface {
@@ -35,6 +43,7 @@ type GerritEventStreamHandler interface {
 type GitSSHRemote struct {
 	*url.URL
 	SshKeyPath string
+	SshOptions map[string]string
 }
 
 // GerritSSHClient represents a Gerrit server
@@ -75,7 +84,10 @@ func NewGerritSSHClient(sshUrl string, sshKeyPath string) (*GerritSSHClient, err
 	if err != nil {
 		return nil, err
 	}
-	sshClient := GitSSHRemote{u, _sshKeyPath}
+	sshClient := GitSSHRemote{
+		URL:        u,
+		SshKeyPath: _sshKeyPath,
+	}
 	return &GerritSSHClient{sshClient}, nil
 }
 
@@ -84,6 +96,7 @@ func NewGerritSSHClient(sshUrl string, sshKeyPath string) (*GerritSSHClient, err
 // Any new tail argument is a gerrit command then the arguments
 // to that command
 func (s *GerritSSHClient) buildSshCommand() []string {
+	// TODO: Support SSHOptions
 	return []string{
 		"-i",
 		s.SshKeyPath,
